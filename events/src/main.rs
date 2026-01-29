@@ -194,8 +194,13 @@ fn main() {
         let mut any_luck = false;
         for event in &events {
             if event.month_day() == month_date {
+                let categories = match &event.category.secondary {
+                    Some(secondary) => &format!("{}/{}", 
+                    &event.category.primary, secondary),
+                    None => &format!("{}", &event.category.primary)
+                };
                 println!("{}: Event: {}, Category: {}", 
-                event.date.year, event.description, event.category.primary);
+                event.date.year, event.description, categories);
                 any_luck = true;
             }   
         }
