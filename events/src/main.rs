@@ -1,3 +1,5 @@
+use std::fmt;
+
 struct Date {
     year: i16,
     month: Month,
@@ -8,7 +10,17 @@ impl Date {
         Self { year, month, day }
     }
 }
-
+impl Default for Date {
+    fn default() -> Self {
+        Self { year: 1970, month: 1, day: 1 }
+    }
+}
+impl fmt::Display for Date {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:04}-{:02}-{:02}",
+            self.year, self.month, self.day)
+    }
+}
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Month {
@@ -53,6 +65,7 @@ impl Event {
         }
     }
 }
+
 #[derive(Debug)]
 struct Category {
     primary: String,
@@ -70,6 +83,21 @@ impl Category {
             primary: primary.to_string(),
             secondary: None,
         }
+    }
+}
+impl fmt::Display for Category {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self.secondary {
+            Some(sec) => write!(f, "{}/{}", self.primary, sec),
+            None => write!(f, "{}", self.primary),
+        }
+    }
+}
+
+impl fmt::Display for Event {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}: {} ({})",
+            self.date.year, self.description, self.category)
     }
 }
 
@@ -194,13 +222,7 @@ fn main() {
         let mut any_luck = false;
         for event in &events {
             if event.month_day() == month_date {
-                let categories = match &event.category.secondary {
-                    Some(secondary) => &format!("{}/{}", 
-                    &event.category.primary, secondary),
-                    None => &format!("{}", &event.category.primary)
-                };
-                println!("{}: Event: {}, Category: {}", 
-                event.date.year, event.description, categories);
+                println!("{}", event);
                 any_luck = true;
             }   
         }
