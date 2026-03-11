@@ -2,28 +2,20 @@ use std::path::PathBuf;
 use std::fs;
 use dirs;
 
-use today::{run, Config};
-
 fn main() {
     const APP_NAME: &str = "today";
     let config_path = get_config_path(APP_NAME);
     match config_path {
-        Some(path) => {
-            let toml_path = path.join(format!("{}.toml", APP_NAME));
-            let config_str = fs::read_to_string(toml_path).expect("existing configuration file");
-            let config: Config = toml::from_str(&config_str).expect("valid configuration file");
-            if let Err(e) = today::run(&config, &path) {
-                eprintln!("Error: {}", e);
-                return;
-            }
-        },
-        None => {
-            eprintln!("Unable to configure the application");
-            return;
-        }
+        Some(path) => println!("Config path: '{}'", path.display()),
+        None => println!("No config directory found!")
     }
 }
 
+// Gets the configuration directory path for the application
+// named in the `app_name` argument.
+// If the directory does not exist, tries to create it.
+// Returns an optional `PathBuf` containing the directory path,
+// or None if the directory can't be created.
 fn get_config_path(app_name: &str) -> Option<PathBuf> {
     if let Some(config_dir) = dirs::config_dir() {
         println!("Config directory: '{}'", config_dir.display());

@@ -58,7 +58,7 @@ impl EventProvider for TextFileProvider {
                             let event = Event::new_singular(date, description.clone(), category);
                             events.push(event);
                         },
-                        Err(e) => {
+                        Err(_) => {
                             eprintln!("Invalid timestamp '{}'", date_string);
                         }
                     }
