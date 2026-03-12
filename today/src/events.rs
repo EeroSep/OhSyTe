@@ -17,6 +17,8 @@ impl MonthDay {
         let day: u32 = s[2..].parse().unwrap();
         Self { month, day }
     }
+    pub fn month(&self) -> u32 { self.month }
+    pub fn day(&self) -> u32 { self.day }
 }       
 
 #[derive(Debug)]
@@ -51,7 +53,7 @@ impl Event {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Category {
     primary: String,
     secondary: Option<String>,

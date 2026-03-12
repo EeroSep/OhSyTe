@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::fs;
 use dirs;
 
-use today::{run, Config};
+use today::Config;
 
 fn main() {
     const APP_NAME: &str = "today";
