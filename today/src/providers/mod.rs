@@ -1,4 +1,5 @@
 use crate::events::Event;
+use crate::filters::EventFilter;
 
 pub mod test_provider;
 pub mod text_file_provider;
@@ -14,5 +15,5 @@ pub use web_provider::WebProvider;
 
 pub trait EventProvider {
     fn name(&self) -> String;
-    fn get_events(&self, events: &mut Vec<Event>);
+    fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>);
 }

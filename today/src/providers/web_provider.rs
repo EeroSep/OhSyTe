@@ -2,8 +2,8 @@ use crate::events::{Event, Category, MonthDay};
 use crate::EventProvider;
 use reqwest::{blocking::Client, blocking::Response};
 use serde::Deserialize;
-use serde_json;
-use chrono::{Local, NaiveDate, Datelike};
+use chrono::NaiveDate;
+use crate::filters::EventFilter;
 
 #[derive(Deserialize, Debug)]
 struct JSONEvent {
@@ -30,9 +30,14 @@ impl EventProvider for WebProvider {
     fn name(&self) -> String {
         self.name.clone()
     }
-    fn get_events(&self, events: &mut Vec<Event>) {
-        let today: NaiveDate = Local::now().date_naive();
-        let month_day = MonthDay::new(today.month(), today.day());
+    fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
+        let month_day: MonthDay;
+        if filter.month_day().is_none() {
+            eprintln!("WebProvider requires month and day filter");
+            return;
+        } else {
+            month_day = filter.month_day().unwrap();
+        }
         let date_parameter = format!(
             "date={:02}-{:02}", 
             month_day.month(), 
@@ -52,7 +57,9 @@ impl EventProvider for WebProvider {
             let date = NaiveDate::parse_from_str(&json_event.date, "%F").unwrap();            
             let category = Category::from_str(&json_event.category);
             let event = Event::new_singular(date, json_event.description, category);
-            events.push(event);
+            if filter.accepts(&event) {
+                events.push(event);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ use chrono::NaiveDate;
 use csv::ReaderBuilder;
 use crate::EventProvider;
 use crate::events::{Event, Category};
+use crate::filters::EventFilter;
 
 pub struct CsvFileProvider {
     name: String,
@@ -20,7 +21,7 @@ impl EventProvider for CsvFileProvider {
     fn name(&self) -> String {
         self.name.clone()
     }
-    fn get_events(&self, events: &mut Vec<Event>) {
+    fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
         let mut reader = ReaderBuilder::new()
             .has_headers(false)
             .from_path(self.path.clone())
@@ -34,7 +35,9 @@ impl EventProvider for CsvFileProvider {
                 Ok(date) => {
                     let category = Category::from_str(&category_string);
                     let event = Event::new_singular(date, description.clone(), category);
-                    events.push(event);
+                    if filter.accepts(&event) {
+                        events.push(event);
+                    }
                 },
                 Err(_) => {
                     eprintln!("Invalid date '{}'", date_string);

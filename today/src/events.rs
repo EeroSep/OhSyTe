@@ -1,7 +1,7 @@
 use chrono::{NaiveDate, Datelike};
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct MonthDay {
     month: u32,
     day: u32,
@@ -51,9 +51,15 @@ impl Event {
                 MonthDay {month: date.month(), day: date.day()},    
         }
     }
+    pub fn description(&self) -> String {
+        self.description.clone()
+    }
+    pub fn category(&self) -> Category {
+        self.category.clone()
+    }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Category {
     primary: String,
     secondary: Option<String>,
@@ -79,6 +85,12 @@ impl Category {
             Self::new(parts[0], parts[1])
         }
     }
+    pub fn primary(&self) -> String {
+        self.primary.clone()
+    }
+    pub fn secondary(&self) -> Option<String> {
+        self.secondary.clone()
+    }
 }
 impl fmt::Display for Category {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -101,7 +113,7 @@ impl fmt::Display for Event {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Category};
+    use super::*;
     #[test]
     fn test_both_individually() {
         let category = Category::new("primary", "secondary");

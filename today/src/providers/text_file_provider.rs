@@ -3,6 +3,7 @@ use crate::EventProvider;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::{BufReader, BufRead};
+use crate::filters::{EventFilter, FilterBuilder};
 
 enum ReadingState {
     Date,
@@ -29,7 +30,7 @@ impl EventProvider for TextFileProvider {
     fn name(&self) -> String {
         self.name.clone()
     }
-    fn get_events(&self, events: &mut Vec<Event>) {
+    fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
         let f = File::open(self.path.clone()).expect("path to text file");
         let reader = BufReader::new(f);
         let mut state = ReadingState::Date;
@@ -56,7 +57,9 @@ impl EventProvider for TextFileProvider {
                         Ok(date) => {
                             let category = Category::from_str(&category_string);
                             let event = Event::new_singular(date, description.clone(), category);
-                            events.push(event);
+                            if filter.accepts(&event) {
+                                events.push(event);
+                            }
                         },
                         Err(_) => {
                             eprintln!("Invalid timestamp '{}'", date_string);
@@ -85,7 +88,8 @@ mod tests {
 
         let provider = TextFileProvider::new("Test Text Provider", test_path);
         let mut events: Vec<Event> = Vec::new();
-        provider.get_events(&mut events);
+        let filter = FilterBuilder::new().build();
+        provider.get_events(&filter, &mut events);
 
         assert_eq!(events.len(), 1);
         assert_eq!(format!("{}", events[0]), "2026: This day (test)");
