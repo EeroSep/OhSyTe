@@ -1,15 +1,15 @@
 mod birthday;
-mod events;
+pub mod events;
 mod providers;
-mod filters;
+pub mod filters;
 
 use std::error::Error;
 use birthday::handle_birthday;
-use events::{Event, MonthDay, Category};
+use events::{Event};
 use crate::providers::{EventProvider, TestProvider, TextFileProvider, CsvFileProvider, SQLiteProvider, WebProvider};
 use std::path::Path;
 use serde::Deserialize;
-use filters::FilterBuilder;
+use filters::{ EventFilter };
 
 #[derive(Debug, Deserialize)]
 pub struct ProviderConfig {
@@ -51,20 +51,13 @@ fn create_providers(config: &Config, config_path: &Path) -> Vec<Box<dyn EventPro
     providers
 }
 
-pub fn run(config: &Config, config_path: &Path) -> Result<(), Box<dyn Error>> {
+pub fn run(config: &Config, config_path: &Path, filter: &EventFilter) -> Result<(), Box<dyn Error>> {
     handle_birthday();
     
     let mut events: Vec<Event> = Vec::new();
     let providers = create_providers(config, config_path);
     let mut count = 0;
-    let today_month_day = MonthDay::new(3, 19);
-    //let today_month_day = MonthDay::new(Local::now().month(), Local::now().day());
-    let category = Category::from_str("test");
-    let filter = FilterBuilder::new()
-    .month_day(today_month_day)
-    .category(category)
-    .build();
-
+    
     for provider in providers{
         provider.get_events(&filter, &mut events);
         let new_count = events.len();

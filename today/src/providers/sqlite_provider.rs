@@ -57,7 +57,7 @@ fn make_category_part(filter: &EventFilter, category_map: &HashMap<i64, Category
         }
         match filter_category_id {
             Some(id) => format!("category_id = {}", id),
-            None => "1=0".to_string(),
+            None => "1=0".to_string(), // If category doesnt exist, return a condition that is always false
         }
     } else {
         "1=0".to_string()
@@ -73,7 +73,6 @@ fn make_text_part(filter: &EventFilter) -> String {
 }
 
 fn make_query(filter: &EventFilter, category_map: &HashMap<i64, Category>) -> String {
-    let base_query = "SELECT event_date, event_description, category_id FROM event";
     let mut parts: Vec<String> = Vec::new();
     if filter.contains_month_day() {
         parts.push(make_date_part(filter));

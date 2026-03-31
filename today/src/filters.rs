@@ -33,7 +33,7 @@ impl EventFilter {
                     *month_day == event.month_day()
                 },
                 FilterOption::Category(category) => {
-                    if let Some(sec) = &category.secondary() {
+                    if let Some(_) = &category.secondary() {
                         *category == event.category()
                     } else {
                         *category.primary() == event.category().primary()

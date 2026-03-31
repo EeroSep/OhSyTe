@@ -3,7 +3,7 @@ use crate::EventProvider;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::{BufReader, BufRead};
-use crate::filters::{EventFilter, FilterBuilder};
+use crate::filters::EventFilter;
 
 enum ReadingState {
     Date,
@@ -77,6 +77,7 @@ mod tests {
     use std::fs::File;
     use std::io::Write;
     use std::path::Path;
+    use crate::filters::FilterBuilder;
     #[test]
     fn test_text_file_provider() {
         let test_path = Path::new("test_events.txt");
