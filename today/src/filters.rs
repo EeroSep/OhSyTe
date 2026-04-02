@@ -6,6 +6,7 @@ pub enum FilterOption {
     MonthDay(MonthDay),
     Category(Category),
     Text(String),
+    ExcludeCategory(Vec<Category>),
 }
 
 pub struct EventFilter {
@@ -41,6 +42,9 @@ impl EventFilter {
                 },
                 FilterOption::Text(text) => {
                     event.description().contains(text)
+                }
+                FilterOption::ExcludeCategory(excluded_categories) => {
+                    !excluded_categories.contains(&event.category())
                 }
             };
             results.push(result);
@@ -114,6 +118,10 @@ impl FilterBuilder {
         EventFilter {
             options: self.options,
         }
+    }
+    pub fn exclude_category(mut self, excluded_categories: Vec<Category>) -> FilterBuilder {
+        self.options.insert(FilterOption::ExcludeCategory(excluded_categories));
+        self
     }
 }
 #[cfg(test)]

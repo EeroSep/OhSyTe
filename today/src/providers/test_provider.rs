@@ -2,6 +2,7 @@ use crate::events::{Event, Category};
 use chrono::{NaiveDate, Local};
 use crate::EventProvider;
 use crate::filters::EventFilter;
+use crate::providers::AddEventError;
 
 pub struct TestProvider {
     name: String,
@@ -25,5 +26,11 @@ impl EventProvider for TestProvider {
         if filter.accepts(&test_event) {
             events.push(test_event);
         }
+    }
+    fn is_add_supported(&self) -> bool {
+        false
+    }
+    fn add_event(&self, _event: &Event) -> Result<(), AddEventError> {
+        Err(AddEventError::NotSupported)
     }
 }

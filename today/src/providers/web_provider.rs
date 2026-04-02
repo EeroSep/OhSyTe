@@ -4,6 +4,7 @@ use reqwest::{blocking::Client, blocking::Response};
 use serde::Deserialize;
 use chrono::NaiveDate;
 use crate::filters::EventFilter;
+use crate::providers::AddEventError;
 
 #[derive(Deserialize, Debug)]
 struct JSONEvent {
@@ -61,5 +62,11 @@ impl EventProvider for WebProvider {
                 events.push(event);
             }
         }
+    }
+    fn is_add_supported(&self) -> bool {
+        false
+    }
+    fn add_event(&self, _event: &Event) -> Result<(), AddEventError> {
+        Err(AddEventError::NotSupported)
     }
 }

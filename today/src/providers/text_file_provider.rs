@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 use crate::filters::EventFilter;
+use crate::providers::AddEventError;
 
 enum ReadingState {
     Date,
@@ -69,6 +70,12 @@ impl EventProvider for TextFileProvider {
                 }
             }
         }
+    }
+    fn is_add_supported(&self) -> bool {
+        true
+    }
+    fn add_event(&self, event: &Event) -> Result<(), AddEventError> {
+        todo!("Adding events to text file is not yet implemented");
     }
 }
 #[cfg(test)]

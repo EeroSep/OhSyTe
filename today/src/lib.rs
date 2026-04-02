@@ -13,14 +13,14 @@ use filters::{ EventFilter };
 
 #[derive(Debug, Deserialize)]
 pub struct ProviderConfig {
-    name: String,
-    kind: String,
+    pub name: String,
+    pub kind: String,
     resource: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    providers: Vec<ProviderConfig>,
+    pub providers: Vec<ProviderConfig>,
 }
 
 fn create_providers(config: &Config, config_path: &Path) -> Vec<Box<dyn EventProvider>> {

@@ -4,6 +4,7 @@ use csv::ReaderBuilder;
 use crate::EventProvider;
 use crate::events::{Event, Category};
 use crate::filters::EventFilter;
+use crate::providers::AddEventError;
 
 pub struct CsvFileProvider {
     name: String,
@@ -44,6 +45,12 @@ impl EventProvider for CsvFileProvider {
                 }
             }
         }
-    }   
+    }
+    fn is_add_supported(&self) -> bool {
+        true
+    }
+    fn add_event(&self, event: &Event) -> Result<(), AddEventError> {
+        todo!("Adding events to csv file is not yet implemented");
+    }
 }
  

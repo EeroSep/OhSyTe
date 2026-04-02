@@ -5,6 +5,7 @@ use crate::EventProvider;
 use sqlite::{Connection, State};
 use std::collections::HashMap;
 use crate::filters::EventFilter;
+use crate::providers::AddEventError;
 
 pub struct SQLiteProvider {
     name: String,
@@ -111,5 +112,11 @@ impl EventProvider for SQLiteProvider {
                 events.push(event);
             }
         }
+    }
+    fn is_add_supported(&self) -> bool {
+        true
+    }
+    fn add_event(&self, event: &Event) -> Result<(), AddEventError> {
+        todo!("Adding events to sqlite database is not yet implemented");
     }
 }

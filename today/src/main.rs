@@ -1,19 +1,34 @@
 use std::path::PathBuf;
 use std::fs;
 use dirs;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use chrono::{NaiveDate, Datelike, Local};
 
 use today::Config;
-use today::events::MonthDay;
+use today::events::{MonthDay, Category};
 use today::filters::{FilterBuilder};
+
+#[derive(Subcommand, Debug, Clone)]
+enum Command {
+    /// List add event providesr
+    Providers,
+    /// Adds an event to an event provider
+    Add,
+}
 
 #[derive(Parser)]
 #[command (name = "today")]
 struct Args {
+    #[command(subcommand)]
+    cmd: Option<Command>,
     #[arg(short, long, help = "Event date in MMDD format")]
     date: Option<String>,
+    #[arg(short, long, help = "Exclude categories, comma-seperated (like a/b,c/d)")]
+    exclude: Option<String>,
+    #[arg(short, long, help = "No age calculation or birthday message")]
+    no_birthday: bool,
 }
+
 
 fn main() {
     let args = Args::parse(); 
@@ -24,11 +39,14 @@ fn main() {
         let today: NaiveDate = Local::now().date_naive();
         MonthDay::new(today.month(), today.day())
     };
-    //let category = Category::from_str("test");
-    let filter = FilterBuilder::new()
-    .month_day(month_day)
-    //.category(Category::from_str("test"))
-    .build();
+
+    let mut fb = FilterBuilder::new();
+    fb = fb.month_day(month_day);
+    if let Some(exclude_str) = args.exclude {
+        let exclude_categories: Vec<Category> = exclude_str.split(",").map(|s| Category::from_str(s)).collect();
+        fb = fb.exclude_category(exclude_categories);
+    }
+    let filter = fb.build();
 
     const APP_NAME: &str = "today";
     let config_path = get_config_path(APP_NAME);
@@ -37,10 +55,20 @@ fn main() {
             let toml_path = path.join(format!("{}.toml", APP_NAME));
             let config_str = fs::read_to_string(toml_path).expect("existing configuration file");
             let config: Config = toml::from_str(&config_str).expect("valid configuration file");
-            if let Err(e) = today::run(&config, &path, &filter) {
-                eprintln!("Error: {}", e);
-                return;
+            match args.cmd {
+                Some(Command::Providers) => {
+                    for provider in config.providers.iter() {
+                        println!("{} ({})", provider.name, provider.kind);
+                    }
+                },
+                _ => {
+                    if let Err(e) = today::run(&config, &path, &filter) {
+                    eprintln!("Error: {}", e);
+                    return;
+                    }
+                },
             }
+
         },
         None => {
             eprintln!("Unable to configure the application");
