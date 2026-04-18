@@ -81,8 +81,6 @@ fn main() {
                     let date = NaiveDate::parse_from_str(&date, "%Y-%m-%d").unwrap();
                     let event = Event::new_singular(date, description, category);
                     add_event(&config, &path, &provider_name, &event);
-                    println!("Adding event '{}' to provider '{}'", event.description(), provider_name);
-
                 },
                 _ => {
                     if !args.no_birthday {

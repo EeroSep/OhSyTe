@@ -154,7 +154,7 @@ impl EventProvider for SQLiteProvider {
         
         let insert_query = "INSERT INTO event (event_date, event_description, category_id) VALUES (?1, ?2, ?3)";
 
-        #[allow(unreachable_patterns)] // This is for no warnings, because there is only singular events in the eventkind enum
+        #[allow(unreachable_patterns)] // This is to get no warnings, because there is only singular events in the eventkind enum
         let date_string = match event.kind {
             EventKind::Singular(date) => 
             date.format("%Y-%m-%d").to_string(),

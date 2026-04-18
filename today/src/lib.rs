@@ -1,6 +1,6 @@
 pub mod birthday;
 pub mod events;
-mod providers;
+pub mod providers;
 pub mod filters;
 
 use std::error::Error;
@@ -63,6 +63,7 @@ pub fn add_event(config: &Config, config_path: &Path, provider_name: &str, event
         Some(p) => {
             if p.is_add_supported() {
                 let _ = p.add_event(event);
+                eprintln!("Adding event '{}' to provider '{}'", event.description(), provider_name);
             } else {
                 eprintln!("Provider '{}' does not support adding events", provider_name);
             }
