@@ -31,6 +31,9 @@ impl EventProvider for WebProvider {
     fn name(&self) -> String {
         self.name.clone()
     }
+    fn kind(&self) -> String {
+        "Web".to_string()
+    }
     fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
         let month_day: MonthDay;
         if filter.month_day().is_none() {
@@ -62,9 +65,6 @@ impl EventProvider for WebProvider {
                 events.push(event);
             }
         }
-    }
-    fn is_add_supported(&self) -> bool {
-        false
     }
     fn add_event(&self, _event: &Event) -> Result<(), AddEventError> {
         Err(AddEventError::NotSupported)

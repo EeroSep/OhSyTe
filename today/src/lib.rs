@@ -1,10 +1,9 @@
-mod birthday;
+pub mod birthday;
 pub mod events;
 mod providers;
 pub mod filters;
 
 use std::error::Error;
-use birthday::handle_birthday;
 use events::{Event};
 use crate::providers::{EventProvider, TestProvider, TextFileProvider, CsvFileProvider, SQLiteProvider, WebProvider};
 use std::path::Path;
@@ -23,7 +22,7 @@ pub struct Config {
     pub providers: Vec<ProviderConfig>,
 }
 
-fn create_providers(config: &Config, config_path: &Path) -> Vec<Box<dyn EventProvider>> {
+pub fn create_providers(config: &Config, config_path: &Path) -> Vec<Box<dyn EventProvider>> {
     let mut providers: Vec<Box<dyn EventProvider>> = Vec::new();
     for cfg in config.providers.iter() {
         let path = config_path.join(&cfg.resource);
@@ -51,8 +50,28 @@ fn create_providers(config: &Config, config_path: &Path) -> Vec<Box<dyn EventPro
     providers
 }
 
+pub fn add_event(config: &Config, config_path: &Path, provider_name: &str, event: &Event) {
+    let providers = create_providers(config, config_path);
+    let mut provider: Option<&dyn EventProvider> = None;
+    for p in &providers {
+        if p.name() == provider_name {
+            provider = Some(p.as_ref());
+            break;
+        }
+    }
+    match provider {
+        Some(p) => {
+            if p.is_add_supported() {
+                let _ = p.add_event(event);
+            } else {
+                eprintln!("Provider '{}' does not support adding events", provider_name);
+            }
+        },
+        None => eprintln!("Provider '{}' not found", provider_name),
+    }
+}
+
 pub fn run(config: &Config, config_path: &Path, filter: &EventFilter) -> Result<(), Box<dyn Error>> {
-    handle_birthday();
     
     let mut events: Vec<Event> = Vec::new();
     let providers = create_providers(config, config_path);

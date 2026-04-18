@@ -4,16 +4,27 @@ use dirs;
 use clap::{Parser, Subcommand};
 use chrono::{NaiveDate, Datelike, Local};
 
-use today::Config;
-use today::events::{MonthDay, Category};
+use today::{Config, add_event, create_providers};
+use today::events::{MonthDay, Category, Event};
 use today::filters::{FilterBuilder};
+use today::birthday::handle_birthday;
 
 #[derive(Subcommand, Debug, Clone)]
 enum Command {
-    /// List add event providesr
+    /// List add event providers
     Providers,
     /// Adds an event to an event provider
-    Add,
+    Add {
+        #[arg(short, long, help = "Provider name to add the event to")]
+        provider_name: String,
+        #[arg(short, long, help = "Event date in YYYY-MM-DD format")]
+        date: String,
+        #[arg(short = 'e', long, help = "Event description")]
+        description: String,
+        #[arg(short, long, help = "Event category")]
+        category: String,
+    },
+    
 }
 
 #[derive(Parser)]
@@ -25,7 +36,7 @@ struct Args {
     date: Option<String>,
     #[arg(short, long, help = "Exclude categories, comma-seperated (like a/b,c/d)")]
     exclude: Option<String>,
-    #[arg(short, long, help = "No age calculation or birthday message")]
+    #[arg(short, long = "no-birthday", help = "No age calculation or birthday message")]
     no_birthday: bool,
 }
 
@@ -42,6 +53,7 @@ fn main() {
 
     let mut fb = FilterBuilder::new();
     fb = fb.month_day(month_day);
+
     if let Some(exclude_str) = args.exclude {
         let exclude_categories: Vec<Category> = exclude_str.split(",").map(|s| Category::from_str(s)).collect();
         fb = fb.exclude_category(exclude_categories);
@@ -57,14 +69,28 @@ fn main() {
             let config: Config = toml::from_str(&config_str).expect("valid configuration file");
             match args.cmd {
                 Some(Command::Providers) => {
-                    for provider in config.providers.iter() {
-                        println!("{} ({})", provider.name, provider.kind);
+                    let providers = create_providers(&config, &path);
+                    println!("Event providers (adding supported): ");
+                    for provider in providers {
+                        println!("{} {} ({})", provider.name(), provider.kind(),
+                        if provider.is_add_supported() { "*" } else { " " });
                     }
                 },
+                Some (Command::Add { provider_name, date, description, category }) => {
+                    let category = Category::from_str(&category);
+                    let date = NaiveDate::parse_from_str(&date, "%Y-%m-%d").unwrap();
+                    let event = Event::new_singular(date, description, category);
+                    add_event(&config, &path, &provider_name, &event);
+                    println!("Adding event '{}' to provider '{}'", event.description(), provider_name);
+
+                },
                 _ => {
+                    if !args.no_birthday {
+                        handle_birthday();
+                    }
                     if let Err(e) = today::run(&config, &path, &filter) {
-                    eprintln!("Error: {}", e);
-                    return;
+                        eprintln!("Error: {}", e);
+                        return;
                     }
                 },
             }

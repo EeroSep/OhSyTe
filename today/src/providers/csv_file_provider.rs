@@ -1,10 +1,12 @@
 use std::path::{Path, PathBuf};
 use chrono::NaiveDate;
-use csv::ReaderBuilder;
+use csv::{ReaderBuilder, Writer};
 use crate::EventProvider;
-use crate::events::{Event, Category};
+use crate::events::{Event, Category, EventKind};
 use crate::filters::EventFilter;
 use crate::providers::AddEventError;
+use std::io::BufWriter;
+
 
 pub struct CsvFileProvider {
     name: String,
@@ -21,6 +23,9 @@ impl CsvFileProvider {
 impl EventProvider for CsvFileProvider {
     fn name(&self) -> String {
         self.name.clone()
+    }
+    fn kind(&self) -> String {
+        "CSV".to_string()
     }
     fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
         let mut reader = ReaderBuilder::new()
@@ -50,7 +55,29 @@ impl EventProvider for CsvFileProvider {
         true
     }
     fn add_event(&self, event: &Event) -> Result<(), AddEventError> {
-        todo!("Adding events to csv file is not yet implemented");
+        let file = std::fs::OpenOptions::new()
+            .append(true)
+            .open(self.path.clone())
+            .expect("path to csv file");
+        let writer = BufWriter::new(file);
+        let mut csv_writer = Writer::from_writer(writer);
+
+        #[allow(unreachable_patterns)] // This is for no warnings, because there is only singular events in the eventkind enum
+        let date_string = match event.kind {
+            EventKind::Singular(date) => 
+            date.format("%Y-%m-%d").to_string(),
+            _ => return Err(super::AddEventError::Failed("Failed to add event".to_string())),
+        };
+
+        csv_writer.write_record([
+            date_string,
+            event.description().to_string(),
+            event.category().to_string()
+        ]).unwrap();
+        csv_writer.flush().unwrap();
+        Ok(())
+            
+        
     }
 }
  

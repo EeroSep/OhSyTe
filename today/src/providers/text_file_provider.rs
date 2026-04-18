@@ -1,8 +1,8 @@
-use crate::events::{Event, Category};
+use crate::events::{Event, Category, EventKind};
 use crate::EventProvider;
 use std::path::{Path, PathBuf};
 use std::fs::File;
-use std::io::{BufReader, BufRead};
+use std::io::{BufReader, BufRead, BufWriter, Write};
 use crate::filters::EventFilter;
 use crate::providers::AddEventError;
 
@@ -30,6 +30,9 @@ impl TextFileProvider {
 impl EventProvider for TextFileProvider {
     fn name(&self) -> String {
         self.name.clone()
+    }
+    fn kind(&self) -> String {
+        "Text".to_string()
     }
     fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
         let f = File::open(self.path.clone()).expect("path to text file");
@@ -75,7 +78,23 @@ impl EventProvider for TextFileProvider {
         true
     }
     fn add_event(&self, event: &Event) -> Result<(), AddEventError> {
-        todo!("Adding events to text file is not yet implemented");
+        let file = File::options()
+            .append(true)
+            .open(self.path.clone())
+            .expect("path to text file for writing");
+        let mut writer = BufWriter::new(file);
+        #[allow(unreachable_patterns)] // This is for no warnings, because there is only singular events in the eventkind enum
+        let result = match event.kind {
+            EventKind::Singular(date) => {
+                writeln!(writer, "{}", date.to_string()).unwrap();
+                writeln!(writer, "{}", event.description()).unwrap();
+                writeln!(writer, "{}", event.category()).unwrap();
+                writeln!(writer, "").unwrap();
+                Ok(())
+            },
+            _ => Err(AddEventError::NotSupported),
+        };
+        result
     }
 }
 #[cfg(test)]

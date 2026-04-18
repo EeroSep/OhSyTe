@@ -28,7 +28,7 @@ pub enum EventKind {
 
 #[derive(Debug)]
 pub struct Event {
-    kind: EventKind,
+    pub kind: EventKind,
     description: String,
     category: Category,
 }
@@ -40,6 +40,7 @@ impl Event {
             category,
         }
     }
+    #[allow(dead_code)]
     fn year(&self) -> i32 {
         match &self.kind {
             EventKind::Singular(date) => date.year(),

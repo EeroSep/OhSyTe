@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use chrono::NaiveDate;
-use crate::events::{Event, Category};
+use crate::events::{Event, Category, EventKind};
 use crate::EventProvider;
 use sqlite::{Connection, State};
 use std::collections::HashMap;
@@ -35,7 +35,23 @@ impl SQLiteProvider {
         }
         category_map
     }
-
+    pub fn add_category(&self, connection: &Connection, category: &Category) -> u32 {
+        let insert_query = "INSERT INTO category (primary_name, secondary_name) VALUES (?1, ?2) RETURNING category_id";
+        let mut statement = connection.prepare(insert_query).unwrap();
+        let primary = category.primary();
+        let secondary = match category.secondary() {
+            Some(sec) => sec,
+            None => "NULL".to_string(),
+        };
+        statement.bind((1, primary.as_str())).unwrap();
+        statement.bind((2, secondary.as_str())).unwrap();
+        if let Ok(State::Row) = statement.next() {
+            let category_id = statement.read::<i64, _>("category_id").unwrap();
+            category_id as u32
+        } else {
+            panic!("Failed to insert category");
+        }
+    }
 }
 
 fn make_date_part(filter: &EventFilter) -> String {
@@ -96,6 +112,9 @@ impl EventProvider for SQLiteProvider {
     fn name(&self) -> String {
         self.name.clone()
     }
+    fn kind(&self) -> String {
+        "SQLite".to_string()
+    }
     fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>) {
         let connection = Connection::open(self.path.clone()).unwrap();
         let category_map = self.get_categories(&connection);
@@ -117,6 +136,35 @@ impl EventProvider for SQLiteProvider {
         true
     }
     fn add_event(&self, event: &Event) -> Result<(), AddEventError> {
-        todo!("Adding events to sqlite database is not yet implemented");
+        let connection = Connection::open(self.path.clone()).unwrap();
+        let category_map = self.get_categories(&connection);
+        let category_id: i64 = {
+            let mut cat_id = None;
+             for (id, cat) in &category_map {
+                if *cat == event.category() {
+                    cat_id = Some(*id);
+                    break;
+                }
+            } 
+            match cat_id {
+                Some(id) => id,
+                None => self.add_category(&connection, &event.category()) as i64,
+            }
+        };
+        
+        let insert_query = "INSERT INTO event (event_date, event_description, category_id) VALUES (?1, ?2, ?3)";
+
+        #[allow(unreachable_patterns)] // This is for no warnings, because there is only singular events in the eventkind enum
+        let date_string = match event.kind {
+            EventKind::Singular(date) => 
+            date.format("%Y-%m-%d").to_string(),
+            _ => return Err(super::AddEventError::Failed("Failed to add event".to_string())),
+        };
+        let mut statement = connection.prepare(insert_query).unwrap();
+        statement.bind((1, date_string.as_str())).unwrap();
+        statement.bind((2, event.description().as_str())).unwrap();
+        statement.bind((3, category_id)).unwrap();
+        statement.next().unwrap();
+        Ok(())
     }
 }

@@ -15,6 +15,7 @@ pub use web_provider::WebProvider;
 
 pub trait EventProvider {
     fn name(&self) -> String;
+    fn kind(&self) -> String { "unknown".to_string() }
     fn get_events(&self, filter: &EventFilter, events: &mut Vec<Event>);
     fn is_add_supported(&self) -> bool { false }
     fn add_event(&self, event: &Event) -> Result<(), AddEventError>;
